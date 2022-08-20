@@ -1,0 +1,953 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "runtimeSource": "invoker",
+        "connection": {
+          "connectionReferenceLogicalName": "new_sharedsharepointonline_733bf"
+        },
+        "api": {
+          "name": "shared_sharepointonline"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        },
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "metadata": {
+            "operationMetadataId": "4efb8ee7-1f0e-4b59-9538-fd5f4d733f0d"
+          },
+          "type": "Request",
+          "kind": "Button",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "title": "template",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": "Please enter your input",
+                  "x-ms-content-hint": "TEXT"
+                },
+                "number": {
+                  "title": "itemID",
+                  "type": "number",
+                  "x-ms-dynamically-added": true,
+                  "description": "Please enter a number",
+                  "x-ms-content-hint": "NUMBER"
+                }
+              },
+              "required": [
+                "text",
+                "number"
+              ]
+            }
+          }
+        }
+      },
+      "actions": {
+        "Initialize_variable_-_output": {
+          "runAfter": {
+            "Initialize_variable_-_flowSettingsTempArray": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "bd1b56ae-8382-435d-93e1-c30c82438c2b"
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "output",
+                "type": "string",
+                "value": "@{replace(replace(triggerBody()['text'],'&#123;','{'),'&#125;','}')}"
+              }
+            ]
+          }
+        },
+        "Initialize_variable_-_flowSettings": {
+          "runAfter": {},
+          "metadata": {
+            "operationMetadataId": "d9cdd3c5-9624-4738-ad96-7c56c483975a"
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "flowSettings",
+                "type": "object",
+                "value": {
+                  "fieldsToFind": [],
+                  "fieldsToSelect": [],
+                  "fieldsToSelectWithExpandProp": [],
+                  "fullRequest": "",
+                  "fieldsTypes": {
+                    "user": [],
+                    "dateTime": [],
+                    "text": []
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "Initialize_variable_-_flowSettingsTempArray": {
+          "runAfter": {
+            "Initialize_variable_-_flowSettings": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "ba91bbbb-e593-486f-bfb5-6270afda3987"
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "flowSettingsTempArray",
+                "type": "array"
+              }
+            ]
+          }
+        },
+        "TRY": {
+          "actions": {
+            "Is_fieldsToFind_gt_0": {
+              "actions": {
+                "Send_an_HTTP_request_to_SharePoint_-_Get_staticName_of_fields": {
+                  "runAfter": {},
+                  "metadata": {
+                    "operationMetadataId": "5137fcb8-f8a1-4495-9395-9897972a9888"
+                  },
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "HttpRequest",
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                    },
+                    "parameters": {
+                      "dataset": "https://karolkozlowski.sharepoint.com/sites/CitDevBlog",
+                      "parameters/method": "GET",
+                      "parameters/uri": "_api/web/lists/GetByID('f2da3bf3-aa97-4e22-aa4a-a93aa74cc93a')/Fields?$select=StaticName,Title,TypeAsString&$filter=@{join(variables('flowSettings')?['fieldsToFind'],' or ')}",
+                      "parameters/headers": {
+                        "Accept": "application/json;odata=nometadata"
+                      }
+                    },
+                    "authentication": {
+                      "type": "Raw",
+                      "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']"
+                    }
+                  },
+                  "description": "join(variables('flowSettings')?['fieldsToFind'],' or ')"
+                },
+                "Are_any_fields_to_replace": {
+                  "actions": {
+                    "Finding_fields_to_get": {
+                      "foreach": "@body('Send_an_HTTP_request_to_SharePoint_-_Get_staticName_of_fields')?['value']",
+                      "actions": {
+                        "Switch": {
+                          "runAfter": {
+                            "Set_variable_-_flowSettings_as_fieldsToSelect": [
+                              "Succeeded"
+                            ]
+                          },
+                          "cases": {
+                            "Case": {
+                              "case": "User",
+                              "actions": {
+                                "Set_variable_-_flowSettingsTempArray_as_fieldsTypes_---_user": {
+                                  "runAfter": {},
+                                  "type": "SetVariable",
+                                  "inputs": {
+                                    "name": "flowSettingsTempArray",
+                                    "value": "@variables('flowSettings')?['fieldsTypes']?['user']"
+                                  },
+                                  "description": "variables('flowSettings')?['fieldsTypes']?['user']"
+                                },
+                                "Append_to_array_variable_-_flowSettingsTempArray_as_fieldsTypes_---_user": {
+                                  "runAfter": {
+                                    "Set_variable_-_flowSettingsTempArray_as_fieldsTypes_---_user": [
+                                      "Succeeded"
+                                    ]
+                                  },
+                                  "type": "AppendToArrayVariable",
+                                  "inputs": {
+                                    "name": "flowSettingsTempArray",
+                                    "value": "@item()?['StaticName']"
+                                  },
+                                  "description": "concat(item()?['StaticName'],'/Title')"
+                                },
+                                "setProperty_-_fieldsTypes_---_user": {
+                                  "runAfter": {
+                                    "Append_to_array_variable_-_flowSettingsTempArray_as_fieldsTypes_---_user": [
+                                      "Succeeded"
+                                    ]
+                                  },
+                                  "type": "Compose",
+                                  "inputs": "@setProperty(variables('flowSettings'),'fieldsTypes', setProperty(variables('flowSettings')['fieldsTypes'],'user',variables('flowSettingsTempArray')))",
+                                  "description": "setProperty(variables('flowSettings'),'fieldsTypes', setProperty(variables('flowSettings')['fieldsTypes'],'user',variables('flowSettingsTempArray')))"
+                                },
+                                "Set_variable_-_flowSettings_as_fieldsTypes_---_user": {
+                                  "runAfter": {
+                                    "setProperty_-_fieldsTypes_---_user": [
+                                      "Succeeded"
+                                    ]
+                                  },
+                                  "type": "SetVariable",
+                                  "inputs": {
+                                    "name": "flowSettings",
+                                    "value": "@outputs('setProperty_-_fieldsTypes_---_user')"
+                                  },
+                                  "description": "@{outputs('setProperty_-_fieldsTypes_---_user')}"
+                                },
+                                "Set_variable_-_flowSettingsTempArray_as_fieldsToSelectWithExpandProp": {
+                                  "runAfter": {
+                                    "Set_variable_-_flowSettings_as_fieldsTypes_---_user": [
+                                      "Succeeded"
+                                    ]
+                                  },
+                                  "type": "SetVariable",
+                                  "inputs": {
+                                    "name": "flowSettingsTempArray",
+                                    "value": "@variables('flowSettings')?['fieldsToSelectWithExpandProp']"
+                                  },
+                                  "description": "variables('flowSettings')?['fieldsToSelectWithExpandProp']"
+                                },
+                                "Append_to_array_variable_-_flowSettingsTempArray_as_fieldsToSelectWithExpandProp": {
+                                  "runAfter": {
+                                    "Set_variable_-_flowSettingsTempArray_as_fieldsToSelectWithExpandProp": [
+                                      "Succeeded"
+                                    ]
+                                  },
+                                  "type": "AppendToArrayVariable",
+                                  "inputs": {
+                                    "name": "flowSettingsTempArray",
+                                    "value": "@concat(item()?['StaticName'],'/ID')"
+                                  },
+                                  "description": "concat(item()?['StaticName'],'/ID')"
+                                },
+                                "setProperty_-_fieldsToSelectWithExpandProp": {
+                                  "runAfter": {
+                                    "Append_to_array_variable_-_flowSettingsTempArray_as_fieldsToSelectWithExpandProp": [
+                                      "Succeeded"
+                                    ]
+                                  },
+                                  "type": "Compose",
+                                  "inputs": "@setProperty(variables('flowSettings'), 'fieldsToSelectWithExpandProp', variables('flowSettingsTempArray'))",
+                                  "description": "setProperty(variables('flowSettings'), 'fieldsToSelectWithExpandProp', variables('flowSettingsTempArray'))"
+                                },
+                                "Set_variable_-_flowSettings_as_fieldsToSelectWithExpandProp": {
+                                  "runAfter": {
+                                    "setProperty_-_fieldsToSelectWithExpandProp": [
+                                      "Succeeded"
+                                    ]
+                                  },
+                                  "type": "SetVariable",
+                                  "inputs": {
+                                    "name": "flowSettings",
+                                    "value": "@outputs('setProperty_-_fieldsToSelectWithExpandProp')"
+                                  }
+                                }
+                              }
+                            },
+                            "Case_2": {
+                              "case": "DateTime",
+                              "actions": {
+                                "Set_variable_-_flowSettings_as_fields_---_dateTime": {
+                                  "runAfter": {
+                                    "setProperty_-_fieldsTypes_---_dateTime": [
+                                      "Succeeded"
+                                    ]
+                                  },
+                                  "type": "SetVariable",
+                                  "inputs": {
+                                    "name": "flowSettings",
+                                    "value": "@outputs('setProperty_-_fieldsTypes_---_dateTime')"
+                                  },
+                                  "description": "@{outputs('setProperty_-_fieldsTypes_---_dateTime')}"
+                                },
+                                "Set_variable_-_flowSettingsTempArray_as_fieldsTypes_---_dateTime": {
+                                  "runAfter": {},
+                                  "type": "SetVariable",
+                                  "inputs": {
+                                    "name": "flowSettingsTempArray",
+                                    "value": "@variables('flowSettings')?['fieldsTypes']?['dateTime']"
+                                  },
+                                  "description": "variables('flowSettings')?['fieldsTypes']?['dateTime']"
+                                },
+                                "Append_to_array_variable_-_flowSettingsTempArray_as_fieldsTypes_---_dateTime": {
+                                  "runAfter": {
+                                    "Set_variable_-_flowSettingsTempArray_as_fieldsTypes_---_dateTime": [
+                                      "Succeeded"
+                                    ]
+                                  },
+                                  "type": "AppendToArrayVariable",
+                                  "inputs": {
+                                    "name": "flowSettingsTempArray",
+                                    "value": "@item()?['StaticName']"
+                                  },
+                                  "description": "item()?['StaticName']"
+                                },
+                                "setProperty_-_fieldsTypes_---_dateTime": {
+                                  "runAfter": {
+                                    "Append_to_array_variable_-_flowSettingsTempArray_as_fieldsTypes_---_dateTime": [
+                                      "Succeeded"
+                                    ]
+                                  },
+                                  "type": "Compose",
+                                  "inputs": "@setProperty(variables('flowSettings'),'fieldsTypes', setProperty(variables('flowSettings')['fieldsTypes'],'dateTime',variables('flowSettingsTempArray')))",
+                                  "description": "setProperty(variables('flowSettings'),'fieldsTypes', setProperty(variables('flowSettings')['fieldsTypes'],'dateTime',variables('flowSettingsTempArray')))"
+                                }
+                              }
+                            }
+                          },
+                          "default": {
+                            "actions": {
+                              "Set_variable_-_flowSettingsTempArray_as_fieldsTypes_---_text": {
+                                "runAfter": {},
+                                "type": "SetVariable",
+                                "inputs": {
+                                  "name": "flowSettingsTempArray",
+                                  "value": "@variables('flowSettings')?['fieldsTypes']?['text']"
+                                },
+                                "description": "variables('flowSettings')?['fieldsTypes']?['text']"
+                              },
+                              "Append_to_array_variable_-_flowSettingsTempArray_as_fieldsTypes_---_text": {
+                                "runAfter": {
+                                  "Set_variable_-_flowSettingsTempArray_as_fieldsTypes_---_text": [
+                                    "Succeeded"
+                                  ]
+                                },
+                                "type": "AppendToArrayVariable",
+                                "inputs": {
+                                  "name": "flowSettingsTempArray",
+                                  "value": "@item()?['StaticName']"
+                                },
+                                "description": "item()?['StaticName']"
+                              },
+                              "setProperty_-_fieldsTypes_---_text": {
+                                "runAfter": {
+                                  "Append_to_array_variable_-_flowSettingsTempArray_as_fieldsTypes_---_text": [
+                                    "Succeeded"
+                                  ]
+                                },
+                                "type": "Compose",
+                                "inputs": "@setProperty(variables('flowSettings'),'fieldsTypes', setProperty(variables('flowSettings')['fieldsTypes'],'text',variables('flowSettingsTempArray')))",
+                                "description": "setProperty(variables('flowSettings'),'fieldsTypes', setProperty(variables('flowSettings')['fieldsTypes'],'text',variables('flowSettingsTempArray')))"
+                              },
+                              "Set_variable_-_flowSettings_as_fieldsTypes_---_text": {
+                                "runAfter": {
+                                  "setProperty_-_fieldsTypes_---_text": [
+                                    "Succeeded"
+                                  ]
+                                },
+                                "type": "SetVariable",
+                                "inputs": {
+                                  "name": "flowSettings",
+                                  "value": "@outputs('setProperty_-_fieldsTypes_---_text')"
+                                },
+                                "description": "@{outputs('setProperty_-_fieldsTypes_---_text')}"
+                              }
+                            }
+                          },
+                          "expression": "@items('Finding_fields_to_get')?['TypeAsString']",
+                          "metadata": {
+                            "operationMetadataId": "6f6806eb-be26-487c-a75c-b937fcdf6404"
+                          },
+                          "type": "Switch"
+                        },
+                        "Set_variable_-_flowSettingsTempArray_as_fieldsToSelect": {
+                          "runAfter": {},
+                          "metadata": {
+                            "operationMetadataId": "0b25c18e-20cd-46d3-bda0-1a6c1fda9588"
+                          },
+                          "type": "SetVariable",
+                          "inputs": {
+                            "name": "flowSettingsTempArray",
+                            "value": "@variables('flowSettings')?['fieldsToSelect']"
+                          },
+                          "description": "variables('flowSettings')?['fieldsToSelect']"
+                        },
+                        "setProperty_-_fieldsToSelect": {
+                          "runAfter": {
+                            "TypeAsString_is_User": [
+                              "Succeeded"
+                            ]
+                          },
+                          "metadata": {
+                            "operationMetadataId": "4be17216-08fb-45ab-9b4a-285e267b16d5"
+                          },
+                          "type": "Compose",
+                          "inputs": "@setProperty(variables('flowSettings'), 'fieldsToSelect', variables('flowSettingsTempArray'))",
+                          "description": "setProperty(variables('flowSettings'), 'fieldsToSelect', variables('flowSettingsTempArray'))"
+                        },
+                        "Set_variable_-_flowSettings_as_fieldsToSelect": {
+                          "runAfter": {
+                            "setProperty_-_fieldsToSelect": [
+                              "Succeeded"
+                            ]
+                          },
+                          "metadata": {
+                            "operationMetadataId": "0ba423a3-95d5-4246-8ac1-441f5fea9260"
+                          },
+                          "type": "SetVariable",
+                          "inputs": {
+                            "name": "flowSettings",
+                            "value": "@outputs('setProperty_-_fieldsToSelect')"
+                          },
+                          "description": "@{outputs('setProperty_-_fieldsToSelect')}"
+                        },
+                        "TypeAsString_is_User": {
+                          "actions": {
+                            "Append_to_array_variable_-_flowSettingsTempArray_as_fieldsToSelect_(user)": {
+                              "runAfter": {},
+                              "metadata": {
+                                "operationMetadataId": "d26134c7-344c-4f0c-bd9d-d01e70b2874b"
+                              },
+                              "type": "AppendToArrayVariable",
+                              "inputs": {
+                                "name": "flowSettingsTempArray",
+                                "value": "@concat(item()?['StaticName'],'/Title')"
+                              },
+                              "description": "concat(item()?['StaticName'],'/Title')"
+                            }
+                          },
+                          "runAfter": {
+                            "Set_variable_-_flowSettingsTempArray_as_fieldsToSelect": [
+                              "Succeeded"
+                            ]
+                          },
+                          "else": {
+                            "actions": {
+                              "Append_to_array_variable_-_flowSettingsTempArray_as_fieldsToSelect": {
+                                "runAfter": {},
+                                "metadata": {
+                                  "operationMetadataId": "e30b0c80-08ed-4c6e-93cb-2ca6c17eb542"
+                                },
+                                "type": "AppendToArrayVariable",
+                                "inputs": {
+                                  "name": "flowSettingsTempArray",
+                                  "value": "@item()?['StaticName']"
+                                },
+                                "description": "item()?['StaticName']"
+                              }
+                            }
+                          },
+                          "expression": {
+                            "equals": [
+                              "@item()?['TypeAsString']",
+                              "User"
+                            ]
+                          },
+                          "metadata": {
+                            "operationMetadataId": "1a536edf-e1c7-4213-9ff9-0344ee5abfd0"
+                          },
+                          "type": "If"
+                        }
+                      },
+                      "runAfter": {},
+                      "metadata": {
+                        "operationMetadataId": "bb32a97f-3c14-4e03-a7d2-aa07081d3276"
+                      },
+                      "type": "Foreach",
+                      "description": "@{body('Send_an_HTTP_request_to_SharePoint_-_Get_staticName_of_fields')?['value']}"
+                    }
+                  },
+                  "runAfter": {
+                    "Send_an_HTTP_request_to_SharePoint_-_Get_staticName_of_fields": [
+                      "Succeeded"
+                    ]
+                  },
+                  "expression": {
+                    "greater": [
+                      "@length(body('Send_an_HTTP_request_to_SharePoint_-_Get_staticName_of_fields')?['value'])",
+                      0
+                    ]
+                  },
+                  "metadata": {
+                    "operationMetadataId": "5a9868d2-bcb8-481a-bafb-5587536ea14c"
+                  },
+                  "type": "If",
+                  "description": "length(body('Send_an_HTTP_request_to_SharePoint_-_Get_staticName_of_fields')?['value'])"
+                }
+              },
+              "runAfter": {
+                "Finding_fields_to_replace": [
+                  "Succeeded"
+                ]
+              },
+              "expression": {
+                "greater": [
+                  "@length(variables('flowSettings')?['fieldsToFind'])",
+                  0
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "eaa9b425-d4e2-4ebf-9d58-253d316e4243"
+              },
+              "type": "If",
+              "description": "length(variables('flowSettings')?['fieldsToFind'])"
+            },
+            "Finding_fields_to_replace": {
+              "foreach": "@split(variables('output'),'{')",
+              "actions": {
+                "Are_items_to_find": {
+                  "actions": {
+                    "Set_variable_-_flowSettingsTempArray_as_fieldsToFind": {
+                      "runAfter": {},
+                      "metadata": {
+                        "operationMetadataId": "2848849f-7805-47e0-8a1b-d811735eee1c"
+                      },
+                      "type": "SetVariable",
+                      "inputs": {
+                        "name": "flowSettingsTempArray",
+                        "value": "@variables('flowSettings')?['fieldsToFind']"
+                      },
+                      "description": "variables('flowSettings')?['fieldsToFind']"
+                    },
+                    "Append_to_array_variable_-_flowSettingsTempArray_as_fieldsToFind": {
+                      "runAfter": {
+                        "Set_variable_-_flowSettingsTempArray_as_fieldsToFind": [
+                          "Succeeded"
+                        ]
+                      },
+                      "metadata": {
+                        "operationMetadataId": "8511a23b-bc6b-43dd-8e9f-f82c996b2b24"
+                      },
+                      "type": "AppendToArrayVariable",
+                      "inputs": {
+                        "name": "flowSettingsTempArray",
+                        "value": "@concat('(Title eq ''',substring(item(),0,indexOf(item(),'}')),''')')"
+                      },
+                      "description": "concat('(Title eq ''',substring(item(),0,indexOf(item(),'}')),''')')"
+                    },
+                    "Set_variable_-_flowSettings_as_fieldsToFind": {
+                      "runAfter": {
+                        "setProperty_-_fieldsToFind": [
+                          "Succeeded"
+                        ]
+                      },
+                      "metadata": {
+                        "operationMetadataId": "e821865d-2488-49e8-85ac-8469b1b07d94"
+                      },
+                      "type": "SetVariable",
+                      "inputs": {
+                        "name": "flowSettings",
+                        "value": "@outputs('setProperty_-_fieldsToFind')"
+                      },
+                      "description": "@{outputs('setProperty_-_fieldsToFind')}"
+                    },
+                    "setProperty_-_fieldsToFind": {
+                      "runAfter": {
+                        "Append_to_array_variable_-_flowSettingsTempArray_as_fieldsToFind": [
+                          "Succeeded"
+                        ]
+                      },
+                      "metadata": {
+                        "operationMetadataId": "0a7882fe-5198-4d1b-9baa-6eb59785679d"
+                      },
+                      "type": "Compose",
+                      "inputs": "@setProperty(variables('flowSettings'), 'fieldsToFind', variables('flowSettingsTempArray'))",
+                      "description": "setProperty(variables('flowSettings'), 'fieldsToFind', variables('flowSettingsTempArray'))"
+                    }
+                  },
+                  "runAfter": {},
+                  "expression": {
+                    "greater": [
+                      "@indexOf(item(),'}')",
+                      0
+                    ]
+                  },
+                  "metadata": {
+                    "operationMetadataId": "492f7ba2-50be-453d-9b09-03cb9a3209ed"
+                  },
+                  "type": "If",
+                  "description": "indexOf(item(),'}')"
+                }
+              },
+              "runAfter": {},
+              "metadata": {
+                "operationMetadataId": "7327d9d4-882e-48aa-a6b5-52d284964d95"
+              },
+              "type": "Foreach",
+              "description": "@{split(variables('output'),'{')}"
+            },
+            "Select_or_select_and_expand": {
+              "actions": {
+                "Compose_-_select_and_expand": {
+                  "runAfter": {},
+                  "metadata": {
+                    "operationMetadataId": "4ad00e65-51b6-46a3-bcbe-a2b73ddd4597"
+                  },
+                  "type": "Compose",
+                  "inputs": "?$select=@{join(variables('flowSettings')?['fieldsToSelect'],',')}&$expand=@{join(variables('flowSettings')?['fieldsToSelectWithExpandProp'],',')}",
+                  "description": "?$select=join(variables('flowSettings')?['fieldsToSelect'],',')&$expand=join(variables('flowSettings')?['fieldsToSelectWithExpandProp'],',')"
+                },
+                "setProperty_-_fullRequest": {
+                  "runAfter": {
+                    "Compose_-_select_and_expand": [
+                      "Succeeded"
+                    ]
+                  },
+                  "metadata": {
+                    "operationMetadataId": "a376f923-b7dd-4995-b119-c7090dab5f1e"
+                  },
+                  "type": "Compose",
+                  "inputs": "@setProperty(variables('flowSettings'), 'fullRequest', outputs('Compose_-_select_and_expand'))",
+                  "description": "setProperty(variables('flowSettings'), 'fullRequest', outputs('Compose_-_select_and_expand'))"
+                },
+                "Set_variable_-_flowSettings_as_fullRequest": {
+                  "runAfter": {
+                    "setProperty_-_fullRequest": [
+                      "Succeeded"
+                    ]
+                  },
+                  "metadata": {
+                    "operationMetadataId": "d9807719-f48b-41f5-85bc-971d45194f34"
+                  },
+                  "type": "SetVariable",
+                  "inputs": {
+                    "name": "flowSettings",
+                    "value": "@outputs('setProperty_-_fullRequest')"
+                  },
+                  "description": "@{outputs('setProperty_-_fullRequest')}"
+                },
+                "Send_an_HTTP_request_to_SharePoint_-_get_fields_value": {
+                  "runAfter": {
+                    "Set_variable_-_flowSettings_as_fullRequest": [
+                      "Succeeded"
+                    ]
+                  },
+                  "metadata": {
+                    "operationMetadataId": "195477fc-b6e5-4170-9877-3b86eb44a419"
+                  },
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "HttpRequest",
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                    },
+                    "parameters": {
+                      "dataset": "https://karolkozlowski.sharepoint.com/sites/CitDevBlog",
+                      "parameters/method": "GET",
+                      "parameters/uri": "_api/web/lists/GetByID('f2da3bf3-aa97-4e22-aa4a-a93aa74cc93a')/items(@{triggerBody()['number']})/@{variables('flowSettings')?['fullRequest']}",
+                      "parameters/headers": {
+                        "Accept": "application/json;odata=nometadata"
+                      }
+                    },
+                    "authentication": {
+                      "type": "Raw",
+                      "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']"
+                    }
+                  },
+                  "description": "variables('flowSettings')?['fullRequest']"
+                }
+              },
+              "runAfter": {
+                "Is_fieldsToFind_gt_0": [
+                  "Succeeded"
+                ]
+              },
+              "expression": {
+                "greater": [
+                  1,
+                  0
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "97a6ef9a-de2e-40fe-9d0d-98bc6d11cffc"
+              },
+              "type": "If"
+            },
+            "Replacing": {
+              "foreach": "@body('Send_an_HTTP_request_to_SharePoint_-_Get_staticName_of_fields')?['value']",
+              "actions": {
+                "Compose_-_oldString": {
+                  "runAfter": {},
+                  "metadata": {
+                    "operationMetadataId": "7eb23307-47c6-4e96-b6e0-718aa7d3155a"
+                  },
+                  "type": "Compose",
+                  "inputs": "@concat('{', item()?['Title'], '}')"
+                },
+                "Is_user": {
+                  "actions": {
+                    "Compose_user_-_newString": {
+                      "runAfter": {},
+                      "metadata": {
+                        "operationMetadataId": "f018d184-6e57-4f60-a140-36964ef3fcf2"
+                      },
+                      "type": "Compose",
+                      "inputs": "@body('Send_an_HTTP_request_to_SharePoint_-_get_fields_value')?[item()?['StaticName']]?['Title']",
+                      "description": "body('Send_an_HTTP_request_to_SharePoint_-_get_fields_value')?[item()?['StaticName']]?['Title']"
+                    },
+                    "Replace_user": {
+                      "runAfter": {
+                        "Compose_user_-_newString": [
+                          "Succeeded"
+                        ]
+                      },
+                      "metadata": {
+                        "operationMetadataId": "7c68088b-3b09-40b0-99fa-a639f75f77b2"
+                      },
+                      "type": "Compose",
+                      "inputs": "@replace(variables('output'), outputs('Compose_-_oldString'), outputs('Compose_user_-_newString'))",
+                      "description": "replace(variables('output'), outputs('Compose_-_oldString'), outputs('Compose_user_-_newString'))"
+                    },
+                    "Set_variable_user_-_output": {
+                      "runAfter": {
+                        "Replace_user": [
+                          "Succeeded"
+                        ]
+                      },
+                      "metadata": {
+                        "operationMetadataId": "161f80a5-5093-47d8-b6d4-a46995133664"
+                      },
+                      "type": "SetVariable",
+                      "inputs": {
+                        "name": "output",
+                        "value": "@{outputs('Replace_user')}"
+                      }
+                    }
+                  },
+                  "runAfter": {
+                    "Is_text": [
+                      "Succeeded"
+                    ]
+                  },
+                  "expression": {
+                    "equals": [
+                      "@contains(variables('flowSettings')?['fieldsTypes']?['user'],item()?['StaticName'])",
+                      "@true"
+                    ]
+                  },
+                  "metadata": {
+                    "operationMetadataId": "67a8debc-96bb-41ee-97f5-d5f6e41c722f"
+                  },
+                  "type": "If",
+                  "description": "contains(variables('flowSettings')?['fieldsTypes']?['user'],item()?['StaticName'])"
+                },
+                "Is_dateTime": {
+                  "actions": {
+                    "Convert_time_zone": {
+                      "runAfter": {},
+                      "metadata": {
+                        "operationMetadataId": "3adcf7bf-f20d-4dd4-b41a-519654a35c6c"
+                      },
+                      "type": "Expression",
+                      "kind": "ConvertTimeZone",
+                      "inputs": {
+                        "baseTime": "@{body('Send_an_HTTP_request_to_SharePoint_-_get_fields_value')?[item()?['StaticName']]}",
+                        "formatString": "dd-MM-yyy HH:mm",
+                        "sourceTimeZone": "UTC",
+                        "destinationTimeZone": "Central European Standard Time"
+                      },
+                      "description": "body('Send_an_HTTP_request_to_SharePoint_-_get_fields_value')?[item()?['StaticName']]"
+                    },
+                    "Replace_dateTime": {
+                      "runAfter": {
+                        "Convert_time_zone": [
+                          "Succeeded"
+                        ]
+                      },
+                      "metadata": {
+                        "operationMetadataId": "d48edfbd-132b-4dc9-9348-81db3bc5d637"
+                      },
+                      "type": "Compose",
+                      "inputs": "@replace(variables('output'), outputs('Compose_-_oldString'), body('Convert_time_zone'))",
+                      "description": "replace(variables('output'), outputs('Compose_-_oldString'), body('Convert_time_zone'))"
+                    },
+                    "Set_variable_dateTime_-_output": {
+                      "runAfter": {
+                        "Replace_dateTime": [
+                          "Succeeded"
+                        ]
+                      },
+                      "metadata": {
+                        "operationMetadataId": "4f2f295d-0bd3-4a3a-b7f6-57d3c78349df"
+                      },
+                      "type": "SetVariable",
+                      "inputs": {
+                        "name": "output",
+                        "value": "@{outputs('Replace_dateTime')}"
+                      }
+                    }
+                  },
+                  "runAfter": {
+                    "Is_user": [
+                      "Succeeded"
+                    ]
+                  },
+                  "expression": {
+                    "equals": [
+                      "@contains(variables('flowSettings')?['fieldsTypes']?['dateTime'], item()?['StaticName'])",
+                      "@true"
+                    ]
+                  },
+                  "metadata": {
+                    "operationMetadataId": "2d33ff07-27d7-480a-8f2c-3777706c4866"
+                  },
+                  "type": "If",
+                  "description": "contains(variables('flowSettings')?['fieldsTypes']?['dateTime'], item()?['StaticName'])"
+                },
+                "Is_text": {
+                  "actions": {
+                    "Compose_text_-_newString": {
+                      "runAfter": {},
+                      "metadata": {
+                        "operationMetadataId": "cd39592f-b2cc-4761-a71b-cde58a17d32c"
+                      },
+                      "type": "Compose",
+                      "inputs": "@string(body('Send_an_HTTP_request_to_SharePoint_-_get_fields_value')?[item()?['StaticName']])",
+                      "description": "string(body('Send_an_HTTP_request_to_SharePoint_-_get_fields_value')?[item()?['StaticName']])"
+                    },
+                    "Replace_text": {
+                      "runAfter": {
+                        "Compose_text_-_newString": [
+                          "Succeeded"
+                        ]
+                      },
+                      "metadata": {
+                        "operationMetadataId": "f4d89026-d8d5-492e-988f-d42c5722a800"
+                      },
+                      "type": "Compose",
+                      "inputs": "@replace(variables('output'),outputs('Compose_-_oldString'),outputs('Compose_text_-_newString'))",
+                      "description": "replace(variables('output'),outputs('Compose_-_oldString'),outputs('Compose_text_-_newString'))"
+                    },
+                    "Set_variable_text_-_output": {
+                      "runAfter": {
+                        "Replace_text": [
+                          "Succeeded"
+                        ]
+                      },
+                      "metadata": {
+                        "operationMetadataId": "727a6a28-1e95-4c9f-a537-fe448ce72476"
+                      },
+                      "type": "SetVariable",
+                      "inputs": {
+                        "name": "output",
+                        "value": "@{outputs('Replace_text')}"
+                      }
+                    }
+                  },
+                  "runAfter": {
+                    "Is_text_---_StaticName": [
+                      "Succeeded"
+                    ]
+                  },
+                  "expression": {
+                    "equals": [
+                      "@contains(variables('flowSettings')?['fieldsTypes']?['text'], item()?['StaticName'])",
+                      "@true"
+                    ]
+                  },
+                  "metadata": {
+                    "operationMetadataId": "6a8e19b2-136a-4905-817e-4054afc5de0f"
+                  },
+                  "type": "If"
+                },
+                "Is_text_---_StaticName": {
+                  "runAfter": {
+                    "Compose_-_oldString": [
+                      "Succeeded"
+                    ]
+                  },
+                  "metadata": {
+                    "operationMetadataId": "9f487b96-12b2-4fe5-836b-7ec694a6077f"
+                  },
+                  "type": "Compose",
+                  "inputs": "@item()?['StaticName']"
+                }
+              },
+              "runAfter": {
+                "Select_or_select_and_expand": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "7435795a-6b98-412e-8884-6c081238cbe5"
+              },
+              "type": "Foreach"
+            }
+          },
+          "runAfter": {
+            "Initialize_variable_-_output": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "c88df3ae-dbc3-4f70-aeb6-8a6992cfb8c7"
+          },
+          "type": "Scope"
+        },
+        "CATCH": {
+          "actions": {
+            "Exception": {
+              "runAfter": {},
+              "metadata": {
+                "operationMetadataId": "f6e8b066-30a4-42d7-8762-d475a6ac728d"
+              },
+              "type": "Compose",
+              "inputs": "@result('try')"
+            }
+          },
+          "runAfter": {
+            "TRY": [
+              "Failed",
+              "Skipped",
+              "TimedOut"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "69baac42-3c85-4278-a96b-d3c0471ec417"
+          },
+          "type": "Scope"
+        },
+        "Output": {
+          "runAfter": {
+            "Template": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "ff98ae6c-7d08-4029-8c2b-9b3814613b16"
+          },
+          "type": "Compose",
+          "inputs": "@variables('output')"
+        },
+        "Template": {
+          "runAfter": {
+            "CATCH": [
+              "Succeeded",
+              "Failed",
+              "Skipped",
+              "TimedOut"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "31b7382d-bfb6-4ce9-9c2e-15079079cb98"
+          },
+          "type": "Compose",
+          "inputs": "@triggerBody()['text']"
+        }
+      }
+    }
+  },
+  "schemaVersion": "1.0.0.0"
+}
